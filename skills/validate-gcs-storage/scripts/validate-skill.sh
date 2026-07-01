@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(cd "$SKILL_ROOT/../.." && pwd)"
+cd "$SKILL_ROOT"
 
 fail() {
   printf 'ERROR: %s\n' "$*" >&2
@@ -14,16 +16,26 @@ require_file() {
 }
 
 require_absent() {
-  [[ ! -e "$1" ]] || fail "file should not exist in this single-skill repo: $1"
+  [[ ! -e "$1" ]] || fail "path should not exist: $1"
 }
 
 require_file "SKILL.md"
 require_file "agents/openai.yaml"
+require_file "references/official-sources.md"
+require_file "references/gcs-validation-workflows.md"
+require_file "references/gcs-python-basic-smoke-map.md"
+require_file "examples/browser-put-direct-upload.md"
+require_file "examples/curl-smoke-checklist.md"
+require_file "examples/fastapi-gcs-contract.md"
 require_file "scripts/validate-skill.sh"
 
+require_file "$REPO_ROOT/README.md"
+require_absent "$REPO_ROOT/SKILL.md"
+require_absent "$REPO_ROOT/agents"
+require_absent "$REPO_ROOT/scripts"
+require_absent "README.md"
 require_absent "INSTALLATION_GUIDE.md"
 require_absent "QUICK_REFERENCE.md"
-require_absent "CHANGELOG.md"
 
 first_line="$(sed -n '1p' SKILL.md)"
 [[ "$first_line" == "---" ]] || fail "SKILL.md must start with frontmatter delimiter"
@@ -63,6 +75,16 @@ for term in \
   esac
 done
 
+for path in \
+  "references/official-sources.md" \
+  "references/gcs-validation-workflows.md" \
+  "references/gcs-python-basic-smoke-map.md" \
+  "examples/browser-put-direct-upload.md" \
+  "examples/curl-smoke-checklist.md" \
+  "examples/fastapi-gcs-contract.md"; do
+  rg -qF "$path" SKILL.md || fail "SKILL.md must route to $path"
+done
+
 for url in \
   "https://cloud.google.com/storage/docs/access-control/signed-urls" \
   "https://cloud.google.com/storage/docs/access-control/signing-urls-with-helpers" \
@@ -71,13 +93,8 @@ for url in \
   "https://cloud.google.com/storage/docs/request-preconditions" \
   "https://cloud.google.com/python/docs/reference/storage/latest/google.cloud.storage.blob.Blob" \
   "https://cloud.google.com/docs/authentication/application-default-credentials"; do
-  rg -qF "$url" SKILL.md || fail "official source missing from SKILL.md: $url"
+  rg -qF "$url" references/official-sources.md || fail "official source missing: $url"
 done
-
-if rg -n "references/" SKILL.md >/tmp/validate-gcs-storage-references.txt; then
-  cat /tmp/validate-gcs-storage-references.txt >&2
-  fail "SKILL.md must be self-contained and must not depend on references/"
-fi
 
 patterns=(
   "BEGIN PRIVATE ""KEY"
@@ -89,10 +106,10 @@ patterns=(
 )
 
 for pattern in "${patterns[@]}"; do
-  if rg -n --hidden --glob '!.git/**' --glob '!scripts/validate-skill.sh' "$pattern" SKILL.md README.md 2>/dev/null >/tmp/validate-gcs-storage-sensitive.txt; then
+  if rg -n --hidden --glob '!.git/**' --glob '!skills/validate-gcs-storage/scripts/validate-skill.sh' "$pattern" "$REPO_ROOT" >/tmp/validate-gcs-storage-sensitive.txt 2>/dev/null; then
     cat /tmp/validate-gcs-storage-sensitive.txt >&2
     fail "sensitive pattern found"
   fi
 done
 
-printf 'validate-gcs-storage skill structure is valid\n'
+printf 'validate-gcs-storage skill package is valid\n'

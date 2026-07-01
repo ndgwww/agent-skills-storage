@@ -1,22 +1,24 @@
-# validate-gcs-storage
+# GCS Storage Skills
 
-Codex skill for reviewing and validating Google Cloud Storage integration work.
+Codex skills for reviewing and validating Google Cloud Storage integration work.
 
-The skill itself is fully contained in `SKILL.md`. This README is only a human-facing note for GitHub visitors and is not required by Codex at runtime.
+This repository is a skill package. The repository root is only for GitHub-facing documentation; the installable skill lives under `skills/validate-gcs-storage/`.
+
+Recommended GitHub repository name: `ndgwww/gcs-storage-skills`.
 
 ## What It Covers
 
-- Google Cloud Storage object operation review.
-- Python and FastAPI storage integration checks.
-- Signed URL upload and download flows.
-- Browser `PUT` direct upload validation.
-- CORS, ADC, IAM, metadata, generation preconditions, and real bucket smoke evidence.
-- Official Google Cloud documentation verification before conclusions.
+- Google Cloud Storage object operation review
+- Python and FastAPI storage integration checks
+- Signed URL upload and download flows
+- Browser `PUT` direct upload validation
+- CORS, ADC, IAM, metadata, generation preconditions, and real bucket smoke evidence
+- Official Google Cloud documentation verification before conclusions
 
 ## Install
 
 ```bash
-npx skills@latest add ndgwww/validate-gcs-storage -g -a codex -y
+npx skills@latest add ndgwww/gcs-storage-skills -g -a codex -s validate-gcs-storage -y --full-depth
 ```
 
 Restart Codex after installation so the skill metadata is reloaded.
@@ -40,5 +42,6 @@ Use validate-gcs-storage to review whether our GCS delete flow is protected by g
 ## Notes
 
 - `README.md` is not part of the skill instructions.
-- `SKILL.md` is intentionally self-contained because some installers copy only that file.
+- `skills/validate-gcs-storage/SKILL.md` is the runtime entrypoint.
+- Supporting resources live in `examples/`, `references/`, and `scripts/` inside the skill directory.
 - Do not put credentials, full temporary URLs, or service account files in issues, logs, prompts, or docs.
